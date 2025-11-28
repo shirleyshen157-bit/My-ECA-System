@@ -11,11 +11,12 @@ SCHEDULE_FILE = '选课教室及教师安排.csv'
 STUDENTS_FILE = '2025-2026 ECA 选课总表.csv'
 DB_FILE = 'eca_daily_logs.csv'
 ADMIN_PASSWORD = "8888"
+LOGO_FILE = "logo.png" # 你的校徽文件名
 
-st.set_page_config(page_title="ECA System", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="CBS ECA System", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 🛠️ 智能数据处理核心 (修复报错的关键)
+# 🛠️ 智能数据处理核心
 # ==========================================
 def smart_read(filename):
     if not os.path.exists(filename): return pd.DataFrame(), f"❌ File not found: {filename}"
@@ -28,13 +29,8 @@ def smart_read(filename):
     return pd.DataFrame(), f"❌ Cannot read: {filename}"
 
 def auto_find_col(df, keywords, target_name):
-    """猎犬算法：在列名中嗅探关键字"""
-    # 如果已经存在目标列，直接返回
     if target_name in df.columns: return df
-    
-    # 遍历所有列名
     for col in df.columns:
-        # 只要列名包含关键字之一
         for kw in keywords:
             if kw in col:
                 df.rename(columns={col: target_name}, inplace=True)
@@ -43,26 +39,16 @@ def auto_find_col(df, keywords, target_name):
 
 def clean_data(df, file_type):
     if df.empty: return df
-    df.columns = df.columns.str.strip() # 去空格
-    
-    # 1. 暴力字典映射 (处理特殊双语表头)
+    df.columns = df.columns.str.strip() 
     map_dict = {
         '星期Day': 'Day', '课程ECA': 'Course', '教室Class': 'Room', 
         '授课教师 Teacher': 'Teacher', '授课教师Teacher': 'Teacher'
     }
     df.rename(columns=map_dict, inplace=True)
-    
-    # 2. 猎犬搜索 (模糊匹配，解决 KeyError)
-    # 找日期列
     df = auto_find_col(df, ['Day', '星期', '日期', 'Week'], 'Day')
-    # 找课程列
     df = auto_find_col(df, ['Course', '课程', 'Activity', 'ECA'], 'Course')
-    # 找老师列
     df = auto_find_col(df, ['Teacher', '老师', '教师', 'Duty'], 'Teacher')
-    # 找学生列 (你报错的地方)
     df = auto_find_col(df, ['Student', 'Name', '学生', '姓名', '名单'], 'Student_Name')
-    
-    # 3. 内容清洗
     for col in df.columns: df[col] = df[col].astype(str).str.strip()
     return df
 
@@ -102,28 +88,32 @@ def logout():
     st.rerun()
 
 # ==========================================
-# 🎨 CSS 样式优化 (解决字体过大问题)
+# 🎨 CSS 样式优化
 # ==========================================
 st.markdown("""
     <style>
-    /* 缩小手机端标题字号 */
     .custom-title {
-        font-size: 1.8rem !important; 
-        font-weight: 700;
-        color: #0F172A;
+        font-size: 1.6rem !important; 
+        font-weight: 800;
+        color: #1E3A8A;
         text-align: center;
-        margin-bottom: 0.5rem;
+        margin-top: 5px;
     }
     .custom-subtitle {
-        font-size: 1rem !important;
+        font-size: 0.9rem !important;
         color: #64748B;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 25px;
     }
-    /* 优化卡片间距 */
+    .logo-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
     .stButton button {
-        height: 3rem;
+        height: 3.2rem;
         font-weight: bold;
+        font-size: 16px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -132,34 +122,40 @@ st.markdown("""
 # 🏠 首页 / Home
 # ==========================================
 if not st.session_state.logged_in:
-    # 优化的标题区
-    st.markdown('<div class="custom-title">ECA 智能管理系统</div>', unsafe_allow_html=True)
-    st.markdown('<div class="custom-subtitle">ECA Management System</div>', unsafe_allow_html=True)
+    
+    # --- Logo 展示区 ---
+    if os.path.exists(LOGO_FILE):
+        col_l, col_c, col_r = st.columns([1, 1, 1])
+        with col_c:
+            st.image(LOGO_FILE, use_column_width=True)
+    else:
+        # 如果还没传Logo，显示一个默认图标
+        st.markdown("<div style='text-align: center; font-size: 50px;'>🏫</div>", unsafe_allow_html=True)
+
+    st.markdown('<div class="custom-title">CBS PYP ECA 管理系统</div>', unsafe_allow_html=True)
+    st.markdown('<div class="custom-subtitle">Extracurricular Activities Management System</div>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 10, 1])
     with col2:
-        # 授课老师入口
         with st.container(border=True):
             st.markdown("**👨‍🏫 授课老师 / Teachers**")
-            if st.button("进入打卡 / Login", key="btn_t", type="primary", use_container_width=True):
+            if st.button("进入打卡 / Check-in Login", key="btn_t", type="primary", use_container_width=True):
                 login("teacher")
                 st.rerun()
         
-        st.write("") # 增加空隙
+        st.write("") 
 
-        # 值班老师入口
         with st.container(border=True):
             st.markdown("**👀 值班巡查 / Duty Patrol**")
-            if st.button("进入巡查 / Login", key="btn_d", use_container_width=True):
+            if st.button("进入巡查 / Patrol Login", key="btn_d", use_container_width=True):
                 login("duty")
                 st.rerun()
         
         st.write("")
         
-        # 管理员
-        with st.expander("🔐 管理员 / Admin"):
-            pwd = st.text_input("Password", type="password", label_visibility="collapsed", placeholder="Password")
-            if st.button("Go", use_container_width=True):
+        with st.expander("🔐 管理员 / Admin Access"):
+            pwd = st.text_input("Password", type="password", label_visibility="collapsed", placeholder="Enter Password")
+            if st.button("登录后台 / Admin Login", use_container_width=True):
                 if pwd == ADMIN_PASSWORD:
                     login("admin")
                     st.rerun()
@@ -170,23 +166,20 @@ if not st.session_state.logged_in:
 # 📱 业务界面
 # ==========================================
 else:
-    # 顶部导航栏
     with st.sidebar:
         st.header(f"👤 {st.session_state.user_role.upper()}")
         if st.button("⬅️ 退出 / Logout"): logout()
 
     # --- 授课老师 ---
     if st.session_state.user_role == "teacher":
-        st.markdown("### 📸 课前打卡 / Check-in")
+        st.markdown("### 📸 课前打卡 / Class Check-in")
         
-        # 获取课程逻辑
         df_sch = load_schedule()
         today_eng = datetime.now().strftime("%A")
         today_chn = {'Monday':'周一','Tuesday':'周二','Wednesday':'周三','Thursday':'周四','Friday':'周五'}.get(today_eng,'')
         
         options = []
         if not df_sch.empty and 'Day' in df_sch.columns:
-            # 模糊匹配日期
             mask = df_sch['Day'].str.contains(today_eng, case=False, na=False) | df_sch['Day'].str.contains(today_chn, na=False)
             df_today = df_sch[mask]
             for _, row in df_today.iterrows():
@@ -196,21 +189,16 @@ else:
         if not options:
             st.warning("📅 No courses found today. (今日无课)")
         else:
-            # 下拉框放在表单外，实现即时刷新
             selected_full = st.selectbox("选择课程 / Select Course", options)
             c_name = selected_full.split(" (")[0]
             t_name = selected_full.split("(")[1].strip(")")
             
-            # --- 匹配学生 ---
             df_stu = load_students()
             students = []
             
-            # 这里的检查至关重要：如果没找到列，显示优雅的提示
             if 'Student_Name' not in df_stu.columns:
                 st.error("⚠️ System Error: Cannot find student name column.")
-                st.caption(f"Columns detected: {list(df_stu.columns)}")
             elif 'Course' in df_stu.columns:
-                # 匹配逻辑
                 def normalize(s): return str(s).lower().replace(' ','').replace('(','').replace(')','').replace('（','').replace('）','')
                 target_clean = normalize(c_name)
                 matched_courses = []
@@ -220,7 +208,6 @@ else:
                     db_clean = normalize(db_c)
                     if len(db_clean)<2: continue
                     if db_clean in target_clean or target_clean in db_clean:
-                        # 校队隔离逻辑
                         t_team = any(k in target_clean for k in sensitive)
                         d_team = any(k in db_clean for k in sensitive)
                         if t_team == d_team:
@@ -229,17 +216,15 @@ else:
                 if matched_courses:
                     students = df_stu[df_stu['Course'].isin(matched_courses)]['Student_Name'].tolist()
 
-            # 显示状态
             if students:
                 st.success(f"✅ Match: {len(students)} Students")
             else:
                 st.warning("⚠️ No student list found (未关联到名单)")
 
-            # 表单
             with st.container(border=True):
                 with st.form("checkin"):
                     if students:
-                        absent = st.multiselect("缺席 / Absent", students)
+                        absent = st.multiselect("缺席 / Absent Students", students)
                     else:
                         absent = st.text_input("缺席名单 / Absent Names").split()
                     
@@ -247,7 +232,7 @@ else:
                     note = st.text_input("备注 / Note")
                     
                     if st.form_submit_button("🚀 提交 / Submit", use_container_width=True):
-                        if not pic: st.error("Photo required")
+                        if not pic: st.error("Photo required (请拍照)")
                         else:
                             save_log({
                                 "Date": datetime.now().strftime("%Y-%m-%d"),
@@ -258,11 +243,10 @@ else:
                             })
                             st.success("Success!")
 
-    # --- 值班老师 ---
+    # --- 值班老师 (已完全双语化) ---
     elif st.session_state.user_role == "duty":
         st.markdown("### 👀 实时巡查 / Duty Patrol")
         
-        # (重复上面的获取课程逻辑)
         df_sch = load_schedule()
         today_eng = datetime.now().strftime("%A")
         today_chn = {'Monday':'周一','Tuesday':'周二','Wednesday':'周三','Thursday':'周四','Friday':'周五'}.get(today_eng,'')
@@ -274,12 +258,11 @@ else:
                 t = row.get('Teacher', 'Unknown')
                 options.append(f"{row['Course']} ({t})")
 
-        if not options: st.info("No courses today.")
+        if not options: st.info("No courses today (今日无课)")
         else:
             target = st.selectbox("巡查课程 / Target Course", options)
             c_name = target.split(" (")[0]
             
-            # 检查状态
             logs = load_logs()
             today_str = datetime.now().strftime("%Y-%m-%d")
             checked = False
@@ -292,10 +275,23 @@ else:
             
             with st.container(border=True):
                 with st.form("duty"):
-                    rate = st.radio("Status", ["🟢 Normal", "🟡 Issue", "🔴 Critical"], horizontal=True)
-                    tags = st.multiselect("Tags", ["Late/迟到", "Phone/玩手机", "No Prep/无备课", "Leave Early/早退"])
-                    note = st.text_area("Note / 备注")
-                    if st.form_submit_button("Submit / 提交", use_container_width=True):
+                    # 双语化评价
+                    rate = st.radio("课堂状态 / Class Status", 
+                                  ["🟢 正常 / Normal", "🟡 需关注 / Issue", "🔴 严重 / Critical"], 
+                                  horizontal=True)
+                    
+                    # 双语化标签
+                    tags = st.multiselect("问题标签 / Issue Tags", 
+                                          ["Late / 老师迟到", 
+                                           "Playing Phone / 玩手机", 
+                                           "No Prep / 未备课", 
+                                           "Early Leave / 早退", 
+                                           "Noisy / 纪律差",
+                                           "Student Safety / 安全隐患"])
+                                           
+                    note = st.text_area("详细备注 / Detailed Note")
+                    
+                    if st.form_submit_button("提交反馈 / Submit Report", use_container_width=True):
                         save_log({
                             "Date": datetime.now().strftime("%Y-%m-%d"),
                             "Time": datetime.now().strftime("%H:%M:%S"),
@@ -303,7 +299,7 @@ else:
                             "Room": "", "Status_Photo": "", "Absent_Students": "",
                             "Duty_Rating": rate, "Duty_Comment": f"{','.join(tags)} {note}"
                         })
-                        st.success("Recorded")
+                        st.success("Recorded (已记录)")
 
     # --- 管理员 ---
     elif st.session_state.user_role == "admin":
