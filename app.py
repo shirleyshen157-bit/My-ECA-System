@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import os
 import re
+import base64
 
 # ==========================================
 # ⚙️ 配置区域 / Config
@@ -13,11 +14,20 @@ DB_FILE = 'eca_daily_logs.csv'
 ADMIN_PASSWORD = "8888"
 LOGO_FILE = "logo.png"
 
-# 页面设置
+# 页面配置
 st.set_page_config(page_title="CBS ECA System", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 🛠️ 核心功能
+# 🖼️ 图像处理函数 (实现完美排版的核心)
+# ==========================================
+def get_img_as_base64(file):
+    """将本地图片转换为 Base64 编码，以便在 HTML 中使用"""
+    with open(file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# ==========================================
+# 🛠️ 智能数据处理核心
 # ==========================================
 def smart_read(filename):
     if not os.path.exists(filename): return pd.DataFrame(), f"❌ File not found: {filename}"
@@ -93,23 +103,16 @@ def logout():
 # ==========================================
 st.markdown("""
     <style>
-    /* 标题样式 - 左对齐 */
-    .header-title {
-        font-size: 1.4rem !important; 
-        font-weight: 800;
-        color: #1E3A8A;
-        margin-top: 10px;
-        line-height: 1.2;
-    }
-    .header-subtitle {
-        font-size: 0.8rem !important;
-        color: #64748B;
-        margin-top: 0px;
-    }
+    /* 按钮高度优化 */
     .stButton button {
-        height: 3.2rem;
+        height: 3.5rem;
         font-weight: bold;
-        font-size: 16px;
+        font-size: 18px;
+        border-radius: 10px;
+    }
+    /* 调整顶部留白 */
+    .block-container {
+        padding-top: 2rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -119,39 +122,51 @@ st.markdown("""
 # ==========================================
 if not st.session_state.logged_in:
     
-    # --- 🟢 头部布局：Logo + 标题 ---
-    # 使用列布局：左边2份宽度给Logo，右边10份给文字
-    col_logo, col_text = st.columns([2, 10]) 
+    # --- 🟢 完美的头部布局 (Flexbox Layout) ---
+    # 如果找到了 Logo 文件，就读取并显示
+    header_html = ""
+    if os.path.exists(LOGO_FILE):
+        img_b64 = get_img_as_base64(LOGO_FILE)
+        # 使用 HTML Flexbox 实现：左图右文，垂直居中
+        header_html = f"""
+        <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px;">
+            <img src="data:image/png;base64,{img_b64}" style="height: 65px; margin-right: 15px;">
+            <div>
+                <h1 style="margin: 0; padding: 0; font-size: 26px; line-height: 1.2; color: #1E3A8A; font-weight: 800;">
+                    CBS PYP ECA 管理系统
+                </h1>
+                <p style="margin: 0; padding: 0; font-size: 14px; color: #64748B; font-weight: 500;">
+                    Extracurricular Activities Management System
+                </p>
+            </div>
+        </div>
+        """
+    else:
+        # 如果没有 Logo，只显示文字
+        header_html = """
+        <div style="margin-bottom: 20px;">
+            <h1 style="margin: 0; font-size: 26px; color: #1E3A8A;">CBS PYP ECA 管理系统</h1>
+            <p style="margin: 0; font-size: 14px; color: #64748B;">Extracurricular Activities Management System</p>
+        </div>
+        """
     
-    with col_logo:
-        if os.path.exists(LOGO_FILE):
-            # width=70 强制限制图片宽度为 70像素，防止巨大化
-            st.image(LOGO_FILE, width=70)
-        else:
-            st.markdown("🏫")
-
-    with col_text:
-        # 紧凑的标题排版
-        st.markdown('<div class="header-title">CBS PYP ECA 管理系统</div>', unsafe_allow_html=True)
-        st.markdown('<div class="header-subtitle">ECA Management System</div>', unsafe_allow_html=True)
+    st.markdown(header_html, unsafe_allow_html=True)
     
-    st.write("") # 增加一点空隙
-    st.markdown("---") # 分割线
-    st.write("")
-
     # --- 登录卡片区 ---
+    st.markdown("---") # 分割线
+    
     col1, col2, col3 = st.columns([1, 10, 1])
     with col2:
         with st.container(border=True):
-            st.markdown("**👨‍🏫 授课老师 / Teachers**")
+            st.markdown("### 👨‍🏫 授课老师 / Teachers")
             if st.button("进入打卡 / Check-in Login", key="btn_t", type="primary", use_container_width=True):
                 login("teacher")
                 st.rerun()
         
-        st.write("") 
+        st.write("") # 空隙
 
         with st.container(border=True):
-            st.markdown("**👀 值班巡查 / Duty Patrol**")
+            st.markdown("### 👀 值班巡查 / Duty Patrol")
             if st.button("进入巡查 / Patrol Login", key="btn_d", use_container_width=True):
                 login("duty")
                 st.rerun()
@@ -168,16 +183,15 @@ if not st.session_state.logged_in:
                     st.error("Wrong password")
 
 # ==========================================
-# 📱 业务界面
+# 📱 业务界面 (保持不变)
 # ==========================================
 else:
-    # 侧边栏
     with st.sidebar:
-        # 这里也加上小 Logo
+        # 侧边栏也显示一个小 Logo
         if os.path.exists(LOGO_FILE):
-            st.image(LOGO_FILE, width=50)
-        st.write(f"**{st.session_state.user_role.upper()}**")
-        st.write(f"📅 {datetime.now().strftime('%Y-%m-%d')}")
+            st.image(LOGO_FILE, width=60)
+        
+        st.subheader(f"👤 {st.session_state.user_role.upper()}")
         if st.button("⬅️ 退出 / Logout"): logout()
 
     # --- 授课老师 ---
@@ -206,7 +220,9 @@ else:
             df_stu = load_students()
             students = []
             
-            if 'Student_Name' in df_stu.columns and 'Course' in df_stu.columns:
+            if 'Student_Name' not in df_stu.columns:
+                st.error("⚠️ System Error: Cannot find student name column.")
+            elif 'Course' in df_stu.columns:
                 def normalize(s): return str(s).lower().replace(' ','').replace('(','').replace(')','').replace('（','').replace('）','')
                 target_clean = normalize(c_name)
                 matched_courses = []
