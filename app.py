@@ -2,11 +2,10 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import os
-import re
 import base64
 
 # ==========================================
-# ⚙️ 配置区域 / Config
+# ⚙️ 配置区域
 # ==========================================
 SCHEDULE_FILE = '选课教室及教师安排.csv'
 STUDENTS_FILE = '2025-2026 ECA 选课总表.csv'
@@ -18,16 +17,14 @@ LOGO_FILE = "logo.png"
 st.set_page_config(page_title="CBS ECA System", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 🖼️ 图像处理函数 (实现完美排版的核心)
+# 🖼️ 图像处理
 # ==========================================
 def get_img_as_base64(file):
-    """将本地图片转换为 Base64 编码，以便在 HTML 中使用"""
-    with open(file, "rb") as f:
-        data = f.read()
+    with open(file, "rb") as f: data = f.read()
     return base64.b64encode(data).decode()
 
 # ==========================================
-# 🛠️ 智能数据处理核心
+# 🛠️ 智能数据核心 (含双语姓名合并)
 # ==========================================
 def smart_read(filename):
     if not os.path.exists(filename): return pd.DataFrame(), f"❌ File not found: {filename}"
@@ -39,27 +36,47 @@ def smart_read(filename):
         except: continue
     return pd.DataFrame(), f"❌ Cannot read: {filename}"
 
-def auto_find_col(df, keywords, target_name):
-    if target_name in df.columns: return df
+def auto_find_col(df, keywords):
+    """查找包含关键字的列名"""
     for col in df.columns:
         for kw in keywords:
-            if kw in col:
-                df.rename(columns={col: target_name}, inplace=True)
-                return df
-    return df
+            if kw in col: return col
+    return None
 
 def clean_data(df, file_type):
     if df.empty: return df
-    df.columns = df.columns.str.strip() 
-    map_dict = {
+    df.columns = df.columns.str.strip()
+    
+    # 1. 基础列名标准化
+    rename_map = {
         '星期Day': 'Day', '课程ECA': 'Course', '教室Class': 'Room', 
         '授课教师 Teacher': 'Teacher', '授课教师Teacher': 'Teacher'
     }
-    df.rename(columns=map_dict, inplace=True)
-    df = auto_find_col(df, ['Day', '星期', '日期', 'Week'], 'Day')
-    df = auto_find_col(df, ['Course', '课程', 'Activity', 'ECA'], 'Course')
-    df = auto_find_col(df, ['Teacher', '老师', '教师', 'Duty'], 'Teacher')
-    df = auto_find_col(df, ['Student', 'Name', '学生', '姓名', '名单'], 'Student_Name')
+    df.rename(columns=rename_map, inplace=True)
+    
+    # 2. 关键列识别
+    col_day = auto_find_col(df, ['Day', '星期', '日期', 'Week'])
+    col_course = auto_find_col(df, ['Course', '课程', 'Activity', 'ECA'])
+    col_teacher = auto_find_col(df, ['Teacher', '老师', '教师', 'Duty'])
+    
+    if col_day: df.rename(columns={col_day: 'Day'}, inplace=True)
+    if col_course: df.rename(columns={col_course: 'Course'}, inplace=True)
+    if col_teacher: df.rename(columns={col_teacher: 'Teacher'}, inplace=True)
+
+    # 3. 🔥 学生姓名双语合并逻辑 (仅针对学生表)
+    if file_type == 'students':
+        # 尝试寻找中文名列和英文名列
+        col_cn = auto_find_col(df, ['中文', '姓名', 'Student', 'Name', '学生'])
+        col_en = auto_find_col(df, ['English', '英文', 'En_Name'])
+        
+        # 如果找到了英文名列，且它和中文名列不是同一列
+        if col_en and col_cn and col_en != col_cn:
+            # 合并：张三 (San Zhang)
+            df['Student_Name'] = df[col_cn].astype(str) + " (" + df[col_en].astype(str) + ")"
+        elif col_cn:
+            # 只有一列，就用那一列
+            df.rename(columns={col_cn: 'Student_Name'}, inplace=True)
+        
     for col in df.columns: df[col] = df[col].astype(str).str.strip()
     return df
 
@@ -84,114 +101,120 @@ def save_log(entry):
     df.to_csv(DB_FILE, index=False)
 
 # ==========================================
-# 🔐 登录逻辑
+# 🔐 登录
 # ==========================================
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if 'user_role' not in st.session_state: st.session_state.user_role = None
 
-def login(role):
-    st.session_state.logged_in = True
-    st.session_state.user_role = role
-
-def logout():
-    st.session_state.logged_in = False
-    st.session_state.user_role = None
-    st.rerun()
+def login(role): st.session_state.logged_in = True; st.session_state.user_role = role
+def logout(): st.session_state.logged_in = False; st.session_state.user_role = None; st.rerun()
 
 # ==========================================
-# 🎨 CSS 样式优化
+# 🎨 CSS 样式精修 (修复遮挡，优化字体)
 # ==========================================
 st.markdown("""
     <style>
-    /* 按钮高度优化 */
+    /* 1. 修复标题被遮挡：增加顶部内边距 */
+    .block-container {
+        padding-top: 3rem !important; 
+        padding-bottom: 2rem !important;
+    }
+    
+    /* 2. 标题字体优化 */
+    .main-title {
+        font-size: 28px !important; 
+        font-weight: 900;
+        color: #1E3A8A;
+        line-height: 1.2;
+        margin: 0;
+    }
+    .sub-title {
+        font-size: 14px !important;
+        color: #64748B;
+        font-weight: 500;
+        margin: 0;
+    }
+    
+    /* 3. 板块标题 (授课老师/值班) - 稍微调小，区别于主标题 */
+    .section-header {
+        font-size: 20px !important;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 5px;
+    }
+    
+    /* 4. 按钮样式 */
     .stButton button {
         height: 3.5rem;
-        font-weight: bold;
-        font-size: 18px;
-        border-radius: 10px;
-    }
-    /* 调整顶部留白 */
-    .block-container {
-        padding-top: 2rem;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 🏠 首页 / Home
+# 🏠 首页
 # ==========================================
 if not st.session_state.logged_in:
     
-    # --- 🟢 完美的头部布局 (Flexbox Layout) ---
-    # 如果找到了 Logo 文件，就读取并显示
+    # --- 头部布局 (Flexbox 垂直居中) ---
     header_html = ""
     if os.path.exists(LOGO_FILE):
         img_b64 = get_img_as_base64(LOGO_FILE)
-        # 使用 HTML Flexbox 实现：左图右文，垂直居中
         header_html = f"""
-        <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px;">
-            <img src="data:image/png;base64,{img_b64}" style="height: 65px; margin-right: 15px;">
+        <div style="display: flex; align-items: center; margin-bottom: 25px;">
+            <img src="data:image/png;base64,{img_b64}" style="height: 70px; margin-right: 15px;">
             <div>
-                <h1 style="margin: 0; padding: 0; font-size: 26px; line-height: 1.2; color: #1E3A8A; font-weight: 800;">
-                    CBS PYP ECA 管理系统
-                </h1>
-                <p style="margin: 0; padding: 0; font-size: 14px; color: #64748B; font-weight: 500;">
-                    Extracurricular Activities Management System
-                </p>
+                <div class="main-title">CBS PYP ECA 管理系统</div>
+                <div class="sub-title">Extracurricular Activities Management System</div>
             </div>
         </div>
         """
     else:
-        # 如果没有 Logo，只显示文字
         header_html = """
-        <div style="margin-bottom: 20px;">
-            <h1 style="margin: 0; font-size: 26px; color: #1E3A8A;">CBS PYP ECA 管理系统</h1>
-            <p style="margin: 0; font-size: 14px; color: #64748B;">Extracurricular Activities Management System</p>
+        <div style="margin-bottom: 25px;">
+            <div class="main-title">CBS PYP ECA 管理系统</div>
+            <div class="sub-title">Extracurricular Activities Management System</div>
         </div>
         """
-    
     st.markdown(header_html, unsafe_allow_html=True)
     
-    # --- 登录卡片区 ---
-    st.markdown("---") # 分割线
+    # --- 登录卡片 ---
+    st.markdown("---")
     
     col1, col2, col3 = st.columns([1, 10, 1])
     with col2:
+        # 授课老师
         with st.container(border=True):
-            st.markdown("### 👨‍🏫 授课老师 / Teachers")
+            st.markdown('<div class="section-header">👨‍🏫 授课老师 / Teachers</div>', unsafe_allow_html=True)
             if st.button("进入打卡 / Check-in Login", key="btn_t", type="primary", use_container_width=True):
-                login("teacher")
-                st.rerun()
+                login("teacher"); st.rerun()
         
-        st.write("") # 空隙
+        st.write("") 
 
+        # 值班巡查
         with st.container(border=True):
-            st.markdown("### 👀 值班巡查 / Duty Patrol")
+            st.markdown('<div class="section-header">👀 值班巡查 / Duty Patrol</div>', unsafe_allow_html=True)
             if st.button("进入巡查 / Patrol Login", key="btn_d", use_container_width=True):
-                login("duty")
-                st.rerun()
+                login("duty"); st.rerun()
         
         st.write("")
         
         with st.expander("🔐 管理员 / Admin Access"):
             pwd = st.text_input("Password", type="password", label_visibility="collapsed", placeholder="Enter Password")
-            if st.button("登录后台 / Admin Login", use_container_width=True):
-                if pwd == ADMIN_PASSWORD:
-                    login("admin")
-                    st.rerun()
-                else:
-                    st.error("Wrong password")
+            if st.button("登录 / Login", use_container_width=True):
+                if pwd == ADMIN_PASSWORD: login("admin"); st.rerun()
+                else: st.error("Wrong password")
 
 # ==========================================
-# 📱 业务界面 (保持不变)
+# 📱 业务界面
 # ==========================================
 else:
     with st.sidebar:
-        # 侧边栏也显示一个小 Logo
-        if os.path.exists(LOGO_FILE):
-            st.image(LOGO_FILE, width=60)
-        
-        st.subheader(f"👤 {st.session_state.user_role.upper()}")
+        if os.path.exists(LOGO_FILE): st.image(LOGO_FILE, width=60)
+        st.write(f"**{st.session_state.user_role.upper()}**")
+        st.write(f"📅 {datetime.now().strftime('%Y-%m-%d')}")
         if st.button("⬅️ 退出 / Logout"): logout()
 
     # --- 授课老师 ---
@@ -210,8 +233,7 @@ else:
                 t = row.get('Teacher', 'Unknown')
                 options.append(f"{row['Course']} ({t})")
         
-        if not options:
-            st.warning("📅 No courses found today. (今日无课)")
+        if not options: st.warning("📅 No courses found today. (今日无课)")
         else:
             selected_full = st.selectbox("选择课程 / Select Course", options)
             c_name = selected_full.split(" (")[0]
@@ -221,7 +243,7 @@ else:
             students = []
             
             if 'Student_Name' not in df_stu.columns:
-                st.error("⚠️ System Error: Cannot find student name column.")
+                st.error("⚠️ Error: Student_Name column not found.")
             elif 'Course' in df_stu.columns:
                 def normalize(s): return str(s).lower().replace(' ','').replace('(','').replace(')','').replace('（','').replace('）','')
                 target_clean = normalize(c_name)
@@ -236,14 +258,11 @@ else:
                         d_team = any(k in db_clean for k in sensitive)
                         if t_team == d_team:
                             matched_courses.append(db_c)
-                
                 if matched_courses:
                     students = df_stu[df_stu['Course'].isin(matched_courses)]['Student_Name'].tolist()
 
-            if students:
-                st.success(f"✅ Match: {len(students)} Students")
-            else:
-                st.warning("⚠️ No student list found (未关联到名单)")
+            if students: st.success(f"✅ Match: {len(students)} Students")
+            else: st.warning("⚠️ No student list found (未关联到名单)")
 
             with st.container(border=True):
                 with st.form("checkin"):
@@ -251,12 +270,10 @@ else:
                         absent = st.multiselect("缺席 / Absent Students", students)
                     else:
                         absent = st.text_input("缺席名单 / Absent Names").split()
-                    
                     pic = st.camera_input("拍照 / Photo")
                     note = st.text_input("备注 / Note")
-                    
                     if st.form_submit_button("🚀 提交 / Submit", use_container_width=True):
-                        if not pic: st.error("Photo required (请拍照)")
+                        if not pic: st.error("Photo required")
                         else:
                             save_log({
                                 "Date": datetime.now().strftime("%Y-%m-%d"),
@@ -270,7 +287,7 @@ else:
     # --- 值班老师 ---
     elif st.session_state.user_role == "duty":
         st.markdown("### 👀 实时巡查 / Duty Patrol")
-        
+        # (获取课程逻辑同上)
         df_sch = load_schedule()
         today_eng = datetime.now().strftime("%A")
         today_chn = {'Monday':'周一','Tuesday':'周二','Wednesday':'周三','Thursday':'周四','Friday':'周五'}.get(today_eng,'')
@@ -282,11 +299,10 @@ else:
                 t = row.get('Teacher', 'Unknown')
                 options.append(f"{row['Course']} ({t})")
 
-        if not options: st.info("No courses today (今日无课)")
+        if not options: st.info("No courses today")
         else:
             target = st.selectbox("巡查课程 / Target Course", options)
             c_name = target.split(" (")[0]
-            
             logs = load_logs()
             today_str = datetime.now().strftime("%Y-%m-%d")
             checked = False
@@ -299,15 +315,9 @@ else:
             
             with st.container(border=True):
                 with st.form("duty"):
-                    rate = st.radio("课堂状态 / Class Status", 
-                                  ["🟢 正常 / Normal", "🟡 需关注 / Issue", "🔴 严重 / Critical"], 
-                                  horizontal=True)
-                    tags = st.multiselect("问题标签 / Issue Tags", 
-                                          ["Late / 老师迟到", "Playing Phone / 玩手机", 
-                                           "No Prep / 未备课", "Early Leave / 早退", 
-                                           "Noisy / 纪律差", "Student Safety / 安全隐患"])
+                    rate = st.radio("课堂状态 / Class Status", ["🟢 正常 / Normal", "🟡 需关注 / Issue", "🔴 严重 / Critical"], horizontal=True)
+                    tags = st.multiselect("问题标签 / Issue Tags", ["Late / 老师迟到", "Phone / 玩手机", "No Prep / 未备课", "Early Leave / 早退", "Noisy / 纪律差", "Safety / 安全隐患"])
                     note = st.text_area("详细备注 / Detailed Note")
-                    
                     if st.form_submit_button("提交反馈 / Submit Report", use_container_width=True):
                         save_log({
                             "Date": datetime.now().strftime("%Y-%m-%d"),
@@ -316,7 +326,7 @@ else:
                             "Room": "", "Status_Photo": "", "Absent_Students": "",
                             "Duty_Rating": rate, "Duty_Comment": f"{','.join(tags)} {note}"
                         })
-                        st.success("Recorded (已记录)")
+                        st.success("Recorded")
 
     # --- 管理员 ---
     elif st.session_state.user_role == "admin":
