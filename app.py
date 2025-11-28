@@ -11,12 +11,13 @@ SCHEDULE_FILE = '选课教室及教师安排.csv'
 STUDENTS_FILE = '2025-2026 ECA 选课总表.csv'
 DB_FILE = 'eca_daily_logs.csv'
 ADMIN_PASSWORD = "8888"
-LOGO_FILE = "logo.png" # 你的校徽文件名
+LOGO_FILE = "logo.png"
 
+# 页面设置
 st.set_page_config(page_title="CBS ECA System", layout="wide", initial_sidebar_state="collapsed")
 
 # ==========================================
-# 🛠️ 智能数据处理核心
+# 🛠️ 核心功能
 # ==========================================
 def smart_read(filename):
     if not os.path.exists(filename): return pd.DataFrame(), f"❌ File not found: {filename}"
@@ -92,23 +93,18 @@ def logout():
 # ==========================================
 st.markdown("""
     <style>
-    .custom-title {
-        font-size: 1.6rem !important; 
+    /* 标题样式 - 左对齐 */
+    .header-title {
+        font-size: 1.4rem !important; 
         font-weight: 800;
         color: #1E3A8A;
-        text-align: center;
-        margin-top: 5px;
+        margin-top: 10px;
+        line-height: 1.2;
     }
-    .custom-subtitle {
-        font-size: 0.9rem !important;
+    .header-subtitle {
+        font-size: 0.8rem !important;
         color: #64748B;
-        text-align: center;
-        margin-bottom: 25px;
-    }
-    .logo-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 10px;
+        margin-top: 0px;
     }
     .stButton button {
         height: 3.2rem;
@@ -123,18 +119,27 @@ st.markdown("""
 # ==========================================
 if not st.session_state.logged_in:
     
-    # --- Logo 展示区 ---
-    if os.path.exists(LOGO_FILE):
-        col_l, col_c, col_r = st.columns([1, 1, 1])
-        with col_c:
-            st.image(LOGO_FILE, use_column_width=True)
-    else:
-        # 如果还没传Logo，显示一个默认图标
-        st.markdown("<div style='text-align: center; font-size: 50px;'>🏫</div>", unsafe_allow_html=True)
-
-    st.markdown('<div class="custom-title">CBS PYP ECA 管理系统</div>', unsafe_allow_html=True)
-    st.markdown('<div class="custom-subtitle">Extracurricular Activities Management System</div>', unsafe_allow_html=True)
+    # --- 🟢 头部布局：Logo + 标题 ---
+    # 使用列布局：左边2份宽度给Logo，右边10份给文字
+    col_logo, col_text = st.columns([2, 10]) 
     
+    with col_logo:
+        if os.path.exists(LOGO_FILE):
+            # width=70 强制限制图片宽度为 70像素，防止巨大化
+            st.image(LOGO_FILE, width=70)
+        else:
+            st.markdown("🏫")
+
+    with col_text:
+        # 紧凑的标题排版
+        st.markdown('<div class="header-title">CBS PYP ECA 管理系统</div>', unsafe_allow_html=True)
+        st.markdown('<div class="header-subtitle">ECA Management System</div>', unsafe_allow_html=True)
+    
+    st.write("") # 增加一点空隙
+    st.markdown("---") # 分割线
+    st.write("")
+
+    # --- 登录卡片区 ---
     col1, col2, col3 = st.columns([1, 10, 1])
     with col2:
         with st.container(border=True):
@@ -166,8 +171,13 @@ if not st.session_state.logged_in:
 # 📱 业务界面
 # ==========================================
 else:
+    # 侧边栏
     with st.sidebar:
-        st.header(f"👤 {st.session_state.user_role.upper()}")
+        # 这里也加上小 Logo
+        if os.path.exists(LOGO_FILE):
+            st.image(LOGO_FILE, width=50)
+        st.write(f"**{st.session_state.user_role.upper()}**")
+        st.write(f"📅 {datetime.now().strftime('%Y-%m-%d')}")
         if st.button("⬅️ 退出 / Logout"): logout()
 
     # --- 授课老师 ---
@@ -196,9 +206,7 @@ else:
             df_stu = load_students()
             students = []
             
-            if 'Student_Name' not in df_stu.columns:
-                st.error("⚠️ System Error: Cannot find student name column.")
-            elif 'Course' in df_stu.columns:
+            if 'Student_Name' in df_stu.columns and 'Course' in df_stu.columns:
                 def normalize(s): return str(s).lower().replace(' ','').replace('(','').replace(')','').replace('（','').replace('）','')
                 target_clean = normalize(c_name)
                 matched_courses = []
@@ -243,7 +251,7 @@ else:
                             })
                             st.success("Success!")
 
-    # --- 值班老师 (已完全双语化) ---
+    # --- 值班老师 ---
     elif st.session_state.user_role == "duty":
         st.markdown("### 👀 实时巡查 / Duty Patrol")
         
@@ -275,20 +283,13 @@ else:
             
             with st.container(border=True):
                 with st.form("duty"):
-                    # 双语化评价
                     rate = st.radio("课堂状态 / Class Status", 
                                   ["🟢 正常 / Normal", "🟡 需关注 / Issue", "🔴 严重 / Critical"], 
                                   horizontal=True)
-                    
-                    # 双语化标签
                     tags = st.multiselect("问题标签 / Issue Tags", 
-                                          ["Late / 老师迟到", 
-                                           "Playing Phone / 玩手机", 
-                                           "No Prep / 未备课", 
-                                           "Early Leave / 早退", 
-                                           "Noisy / 纪律差",
-                                           "Student Safety / 安全隐患"])
-                                           
+                                          ["Late / 老师迟到", "Playing Phone / 玩手机", 
+                                           "No Prep / 未备课", "Early Leave / 早退", 
+                                           "Noisy / 纪律差", "Student Safety / 安全隐患"])
                     note = st.text_area("详细备注 / Detailed Note")
                     
                     if st.form_submit_button("提交反馈 / Submit Report", use_container_width=True):
