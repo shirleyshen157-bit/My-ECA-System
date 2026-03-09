@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 import base64
 
@@ -24,7 +24,7 @@ def get_img_as_base64(file):
 
 def smart_read(filename):
     if not os.path.exists(filename): return pd.DataFrame(), f"❌ File not found: {filename}"
-    for enc in ['utf-8-sig', 'gbk', 'utf-16']:
+    for enc in['utf-8-sig', 'gbk', 'utf-16']:
         try:
             df = pd.read_csv(filename, encoding=enc, engine='python', on_bad_lines='skip', dtype=str)
             if len(df.columns) < 2: continue
@@ -39,7 +39,7 @@ def auto_find_col(df, keywords):
     return None
 
 # ==========================================
-# 🧹 智能数据清洗 
+# 🧹 智能数据清洗 (精准抓取行政班级)
 # ==========================================
 def clean_data(df, file_type):
     if df.empty: return df
@@ -60,6 +60,7 @@ def clean_data(df, file_type):
     if col_teacher: df.rename(columns={col_teacher: 'Teacher'}, inplace=True)
 
     if file_type == 'students':
+        # 1. 抓取中英文姓名并合并
         col_cn = auto_find_col(df, ['中文', '姓名', 'Student', 'Name', '学生'])
         col_en = auto_find_col(df,['English', '英文', 'En_Name'])
         if col_en and col_cn and col_en != col_cn:
@@ -67,11 +68,12 @@ def clean_data(df, file_type):
         elif col_cn:
             df.rename(columns={col_cn: 'Student_Name'}, inplace=True)
             
-        col_class = auto_find_col(df,['班级', 'Class', '班', 'Grade', '年级'])
+        # 2. 抓取【行政班级】 (Homeroom/Class)
+        col_class = auto_find_col(df,['行政班', '班级', '班', 'Class', 'Homeroom', 'Grade', '年级'])
         if col_class: 
             df.rename(columns={col_class: 'Class'}, inplace=True)
         else:
-            df['Class'] = "未分配"
+            df['Class'] = "未分配班级" # 如果没有这一列，设为默认值
         
     for col in df.columns: df[col] = df[col].astype(str).str.strip()
     return df
@@ -90,8 +92,10 @@ def load_students():
 # 💾 数据保存模块
 # ==========================================
 def save_students(df):
+    """保存更新后的名单，固定输出: 行政班级、姓名、ECA课程"""
     if 'Course' in df.columns and 'Student_Name' in df.columns and 'Class' in df.columns:
-        df = df[['Course', 'Class', 'Student_Name']]
+        # 调整列的顺序，看起来更符合逻辑
+        df = df[['Class', 'Student_Name', 'Course']] 
         df.to_csv(STUDENTS_FILE, index=False, encoding='utf-8-sig')
 
 def load_logs():
@@ -218,8 +222,9 @@ else:
                         
                 if matched_courses:
                     matched_df = df_stu[df_stu['Course'].isin(matched_courses)]
+                    # 💡 授课老师点名时，显示：【行政班级】 姓名
                     if 'Class' in matched_df.columns:
-                        students_display = (matched_df['Class'] + " ｜ " + matched_df['Student_Name']).tolist()
+                        students_display = ("【" + matched_df['Class'] + "】" + matched_df['Student_Name']).tolist()
                     else:
                         students_display = matched_df['Student_Name'].tolist()
 
@@ -233,7 +238,7 @@ else:
                     
                     st.markdown("#### 2. 考勤 / Attendance")
                     if students_display: 
-                        absent = st.multiselect("缺席 / Absent", students_display)
+                        absent = st.multiselect("缺席 / Absent", sorted(students_display))
                     else: 
                         absent = st.text_input("缺席名单 / Absent Names").split()
                     
@@ -259,7 +264,6 @@ else:
     elif st.session_state.user_role == "duty":
         st.markdown("### 👀 实时巡查 / Duty Patrol")
         options = get_today_courses()
-
         if not options: st.info("No courses today")
         else:
             target = st.selectbox("巡查课程 / Target Course", options)
@@ -317,25 +321,26 @@ else:
             else: st.info("No data")
 
         # ========================================================
-        # 🔥 全新升级：级联菜单式 (班级 -> 学生 -> 原ECA -> 新ECA) 
+        # 🔥 全新升级：行政班级 级联菜单 (班级 -> 学生 -> 原ECA -> 新ECA) 
         # ========================================================
         with tab2:
             st.markdown("### 🛠️ 教务中心：学生变更 (Student Management)")
-            st.info("💡 **操作提示**：左侧选班级，右侧选学生，下方执行操作。完成所有调整后，请务必在页面最底部下载最新名单覆盖到 GitHub。")
             
             df_stu = load_students()
             df_sch = load_schedule()
             
+            # 获取所有可选的 ECA 课程
             all_courses =[]
             if not df_sch.empty and 'Course' in df_sch.columns:
                 all_courses = sorted(df_sch['Course'].unique().tolist())
             
             if df_stu.empty or 'Course' not in df_stu.columns or 'Student_Name' not in df_stu.columns:
-                st.error("数据未准备好。请检查原始文件。")
+                st.error("⚠️ 原始表格中缺少关键数据列。请确保包含：行政班级、姓名、ECA课程。")
             else:
-                if 'Class' not in df_stu.columns: df_stu['Class'] = "未分配"
-                # 提取所有存在的班级
-                all_classes = sorted(df_stu['Class'].unique().tolist())
+                if 'Class' not in df_stu.columns: df_stu['Class'] = "未分配班级"
+                
+                # 提取所有存在的行政班级
+                all_classes = sorted([str(c) for c in df_stu['Class'].unique() if pd.notna(c)])
                 
                 col_m1, col_m2, col_m3 = st.columns(3)
                 
@@ -343,100 +348,100 @@ else:
                 with col_m1:
                     with st.container(border=True):
                         st.markdown("#### ➕ 增加新生 (Add)")
-                        # 提供下拉选择现有班级，或者输入新班级的选项
-                        is_new_class = st.checkbox("🆕 该生在全新的班级?")
-                        if is_new_class:
-                            new_class = st.text_input("输入新班级名", placeholder="例如: G1-A")
-                        else:
-                            new_class = st.selectbox("选择所属班级", all_classes, key="add_cls")
+                        # 选择行政班级
+                        add_class = st.selectbox("1. 选择所属行政班级", all_classes + ["➕ 创建新班级"], key="add_cls")
+                        if add_class == "➕ 创建新班级":
+                            add_class = st.text_input("输入新班级 (如 G1A)", placeholder="G1A")
                             
-                        new_name = st.text_input("输入学生姓名 (中英文)")
-                        new_course = st.selectbox("分配 ECA 课程", all_courses, key="add_course")
+                        new_name = st.text_input("2. 学生姓名 (中英文)")
+                        new_course = st.selectbox("3. 分配 ECA 课程", all_courses, key="add_course")
                         
                         if st.button("确认添加 / Add", type="primary", use_container_width=True):
-                            if new_name and new_class:
-                                new_row = pd.DataFrame([{'Course': new_course, 'Class': new_class, 'Student_Name': new_name}])
+                            if new_name and add_class:
+                                new_row = pd.DataFrame([{'Course': new_course, 'Class': add_class, 'Student_Name': new_name}])
                                 df_stu = pd.concat([df_stu, new_row], ignore_index=True)
                                 save_students(df_stu)
-                                st.success(f"已将 {new_name} 加入 {new_course}！")
+                                st.success(f"已将 {new_name} 编入 {add_class}，并分配至 {new_course}！")
                                 st.rerun()
                             else:
                                 st.error("姓名和班级不能为空")
 
-                # ----------------- 功能 2: 调换课程 -----------------
+                # ----------------- 功能 2: 调换ECA课程 -----------------
                 with col_m2:
                     with st.container(border=True):
-                        st.markdown("#### 🔄 调换课程 (Transfer)")
+                        st.markdown("#### 🔄 调换ECA (Transfer)")
                         
-                        # 步骤 1：先选班级
-                        trans_class = st.selectbox("1. 选择班级", all_classes, key="t_class")
+                        # 步骤 1：先选行政班级
+                        trans_class = st.selectbox("1. 选择行政班级", all_classes, key="t_class")
                         
-                        # 步骤 2：过滤该班级下的学生
-                        trans_students = sorted(df_stu[df_stu['Class'] == trans_class]['Student_Name'].unique().tolist())
-                        if not trans_students:
-                            st.warning("该班级目前没有学生数据")
+                        # 步骤 2：自动过滤出该行政班的所有学生
+                        students_in_class = sorted(df_stu[df_stu['Class'] == trans_class]['Student_Name'].unique().tolist())
+                        if not students_in_class:
+                            st.warning("该班级无学生")
                         else:
-                            trans_stu = st.selectbox("2. 选择学生", trans_students, key="t_stu")
+                            trans_stu = st.selectbox("2. 选择该班学生", students_in_class, key="t_stu")
                             
-                            # 步骤 3：查找该学生当前正在上的 ECA 课程
+                            # 步骤 3：自动显示该学生原有的 ECA 课程
                             current_ecas = df_stu[(df_stu['Class'] == trans_class) & (df_stu['Student_Name'] == trans_stu)]['Course'].tolist()
                             
                             if not current_ecas:
-                                st.warning("该学生目前未分配任何ECA课程")
+                                st.warning("该生未分配ECA")
                             else:
-                                trans_old_course = st.selectbox("3. 当前ECA (将被换掉)", current_ecas, key="t_old")
+                                trans_old_course = st.selectbox("3. 该生原ECA (将被替换)", current_ecas, key="t_old")
                                 # 步骤 4：选择新课程
-                                trans_new_course = st.selectbox("4. 选择新ECA课程",[c for c in all_courses if c != trans_old_course], key="t_new")
+                                trans_new_course = st.selectbox("4. 选择新ECA", [c for c in all_courses if c != trans_old_course], key="t_new")
                                 
                                 if st.button("确认调换 / Transfer", use_container_width=True):
-                                    # 精准定位要修改的那一行
+                                    # 精准定位：班级+姓名+旧课程 全匹配才修改
                                     mask = (df_stu['Class'] == trans_class) & (df_stu['Student_Name'] == trans_stu) & (df_stu['Course'] == trans_old_course)
                                     df_stu.loc[mask, 'Course'] = trans_new_course
                                     save_students(df_stu)
-                                    st.success(f"已将 {trans_stu} 转入 {trans_new_course}！")
+                                    st.success(f"操作成功！{trans_stu} 已转入 {trans_new_course}")
                                     st.rerun()
 
                 # ----------------- 功能 3: 移除学生 -----------------
                 with col_m3:
                     with st.container(border=True):
-                        st.markdown("#### ❌ 移除学生 (Remove)")
+                        st.markdown("#### ❌ 从ECA移除 (Remove)")
                         
-                        # 步骤 1：先选班级
-                        del_class = st.selectbox("1. 选择班级", all_classes, key="d_class")
+                        # 步骤 1：先选行政班级
+                        del_class = st.selectbox("1. 选择行政班级", all_classes, key="d_class")
                         
-                        # 步骤 2：过滤学生
-                        del_students = sorted(df_stu[df_stu['Class'] == del_class]['Student_Name'].unique().tolist())
-                        if not del_students:
-                            st.warning("该班级目前没有学生数据")
+                        # 步骤 2：选学生
+                        del_students_in_class = sorted(df_stu[df_stu['Class'] == del_class]['Student_Name'].unique().tolist())
+                        if not del_students_in_class:
+                            st.warning("该班级无学生")
                         else:
-                            del_stu = st.selectbox("2. 选择学生", del_students, key="d_stu")
+                            del_stu = st.selectbox("2. 选择该班学生", del_students_in_class, key="d_stu")
                             
-                            # 步骤 3：查找该学生当前的 ECA 课程
+                            # 步骤 3：确认原ECA
                             del_ecas = df_stu[(df_stu['Class'] == del_class) & (df_stu['Student_Name'] == del_stu)]['Course'].tolist()
                             
                             if not del_ecas:
-                                st.warning("该学生目前未分配任何ECA课程")
+                                st.warning("该生未分配ECA")
                             else:
-                                del_old_course = st.selectbox("3. 确认要移除的ECA", del_ecas, key="d_old")
+                                del_old_course = st.selectbox("3. 选择要退出的ECA", del_ecas, key="d_old")
                                 
                                 if st.button("确认移除 / Remove", use_container_width=True):
-                                    # 精准定位并反向过滤（删除该行）
                                     mask = (df_stu['Class'] == del_class) & (df_stu['Student_Name'] == del_stu) & (df_stu['Course'] == del_old_course)
                                     df_stu = df_stu[~mask]
                                     save_students(df_stu)
-                                    st.success(f"已将 {del_stu} 从 {del_old_course} 中移除！")
+                                    st.success(f"{del_stu} 已从 {del_old_course} 中移除！")
                                     st.rerun()
             
             # --- 终极保存下载区 ---
             st.markdown("---")
-            st.markdown("### 📥 第 2 步：下载最新名单并归档")
-            st.warning("⚠️ **非常重要：** 云端系统重启会导致以上修改流失。请务必点击下方按钮，下载最新的 `2025-2026 ECA 选课总表.csv`，然后去 GitHub 上覆盖原文件，实现永久保存！")
+            st.markdown("### 📥 最终步骤：下载最新总表并归档至 GitHub")
+            st.warning("👉 云端记忆有限：在此页面修改后，请务必点击下方按钮下载最新的 `2025-2026 ECA 选课总表.csv`，并将其覆盖上传到 GitHub，这样才能永久生效！")
             
             df_latest = load_students()
-            # 下载时保证格式统一，且包含班级
+            # 下载的 CSV 会被整理得非常规范：[行政班级, 学生姓名, ECA课程]
+            if not df_latest.empty:
+                df_latest = df_latest[['Class', 'Student_Name', 'Course']]
+            
             csv_data = df_latest.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
-                label="📥 下载最新排课大名单 (CSV)",
+                label="📥 下载最新排课总表 (CSV)",
                 data=csv_data,
                 file_name='2025-2026 ECA 选课总表.csv',
                 mime='text/csv',
