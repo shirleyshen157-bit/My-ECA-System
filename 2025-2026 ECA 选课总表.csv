@@ -1,5 +1,4 @@
 ﻿学生姓名Student,学生英文名,性别Gender,班级Class,课程ECA
-熊昱达,Edmond Dantes,男,G1A,中国画Chinese Painting
 巢栩月,Bella,女,G1A,中国画Chinese Painting
 胡语桐,nemo,女,G2A,中国画Chinese Painting
 许君泽,Wallace,男,G2A,中国画Chinese Painting
@@ -7,39 +6,37 @@
 顾铭义,EVA,女,G2B,中国画Chinese Painting
 李/LI,嘉慧：GAIA,女,G2B,中国画Chinese Painting
 肖羽涵,Lydia,女,G2C,中国画Chinese Painting
-Buschka Ophelia,Ophelia Buschka,女,G2C,中国画Chinese Painting
 小野静珂,Maggie,女,G2C,中国画Chinese Painting
 罗佳瑞,Rina,女,G3A,中国画Chinese Painting
 蒋羲馡,Helen,女,G3A,中国画Chinese Painting
 王心红,Miku,女,G3B,中国画Chinese Painting
 Vivian Schlettig,Vivian Schlettig,女,G3C,中国画Chinese Painting
 肖羽斐,Olivia Xiao,女,G3C,中国画Chinese Painting
+Raymond Schlettig,Raymond Schlettig,男,G3C,中国画Chinese Painting
 卢雨程,Mia,女,G4A,中国画Chinese Painting
 袁梦,Mia,女,G4A,中国画Chinese Painting
 PARK SEOEUN,Diana,女,G4A,中国画Chinese Painting
 王艺淳,Esmee,女,G4A,中国画Chinese Painting
 李谞妍,BELLA,女,G4B,中国画Chinese Painting
-李悦涵,Emily,女,G5A,中国画Chinese Painting
+安迪,Andy,男,G4B,中国画Chinese Painting
 黄沛宁,Lemon,女,G5B,中国画Chinese Painting
 吴怡萱,Lisa,女,G5B,中国画Chinese Painting
 吴廷媛,Anna,女,G5B,中国画Chinese Painting
 张泽谦,Kris,男,G1A,中国象棋Chines Go
+王楚钧,Jeremiah,男,G1A,中国象棋Chines Go
 龚詝,Juju,女,G2A,中国象棋Chines Go
 顾圆媛,Jessica,女,G3A,中国象棋Chines Go
 曹牧云,Candy,女,G4A,中国象棋Chines Go
 毛蓝陶,Lucas Mao,男,G4B,中国象棋Chines Go
 巢凯翔,Dollar,男,G3A,书法Calligraphy
 朱奕翰,Ian,男,G3A,书法Calligraphy
-周嘉涵,Michael,男,G3A,书法Calligraphy
 纪天宇,Joy,男,G3B,书法Calligraphy
-吴泇诺,Jonna,女,G3B,书法Calligraphy
 Lisa Ming Brooks,Lisa Ming Brooks,女,G3C,书法Calligraphy
 陈懿宸,Ethan,男,G4A,书法Calligraphy
-李悦涵,Emily,女,G5A,书法Calligraphy
 苏浩丞,Danny,男,G5A,书法Calligraphy
 张蓝心,Lancy,女,G5A,书法Calligraphy
 彭星玮,Jerry,男,G5B,书法Calligraphy
-颜瑾,Ken,男,G5B,书法Calligraphy
+吴怡萱,Lisa,女,G5B,书法Calligraphy
 胡宸聿,Eric,男,G3A,公众演讲Public speaking
 缪依恬,ELAINA MIAO,女,G3A,公众演讲Public speaking
 Vivian Schlettig,Vivian Schlettig,女,G3C,公众演讲Public speaking
@@ -49,7 +46,6 @@ Vivian Schlettig,Vivian Schlettig,女,G3C,公众演讲Public speaking
 胡羽堂,Noah,男,G3A,创意写作Creative writing
 李辰婕,Chenchen,女,G3A,创意写作Creative writing
 戴晨瑜,Delia,女,G3B,创意写作Creative writing
-金博衍,Leo Jin,男,G3B,创意写作Creative writing
 刘承宇,Leo,男,G3B,创意写作Creative writing
 罗启轩,Nathan,男,G3B,创意写作Creative writing
 王心红,Miku,女,G3B,创意写作Creative writing
@@ -59,7 +55,6 @@ Vivian Schlettig,Vivian Schlettig,女,G3C,公众演讲Public speaking
 袁瑞涵,Rayna Yuan,女,G3C,创意写作Creative writing
 Callahan Jacob Mast,Callahan Jacob Mast,男,G4B,创意写作Creative writing
 陈奕帆,Ivanka,女,G4B,创意写作Creative writing
-陈修原,Allen,男,G5A,创意写作Creative writing
 FAN JUNYI,Jerry,男,G1B,合唱Choir
 康珺睿,Nice,女,G1B,合唱Choir
 王成希,Chance,男,G1B,合唱Choir
@@ -131,10 +126,10 @@ Xie Hanrui,MiMi,女,G5A,国际象棋（校队）Chess（school team）
 季毅洋,Evan,男,G4A,射箭Archery
 Callahan Jacob Mast,Callahan Jacob Mast,男,G4B,射箭Archery
 陈奕帆,Ivanka,女,G4B,射箭Archery
-蒋逸楠,Daniel Stapperfenne,男,G4B,射箭Archery
 王楚淏,Jeremy,男,G5A,射箭Archery
 陈欣妤,Lemon,女,G5B,射箭Archery
 蔡雨臻,Eleven,女,G1A,小主持人Little host
+曹骏宏,Jason,男,G1A,小主持人Little host
 康珺睿,Nice,女,G1B,小主持人Little host
 孙欣晨,Cinzia,女,G1B,小主持人Little host
 陆芊伊,Melody,女,G2A,小主持人Little host
@@ -203,6 +198,7 @@ Lucas Xu,Lucas,男,G5B,网球Tennis
 曹紫娟,UV,女,G1B,舞蹈Street dance
 吴昀真,Chloe Yunzhen Wu,女,G1C,舞蹈Street dance
 马爱莉,Elly,女,G2B,舞蹈Street dance
+Buschka Ophelia,Ophelia Buschka,女,G2C,舞蹈Street dance
 Khusnura Zakhidjanova,Lily,女,G2C,舞蹈Street dance
 顾皓琪,Cici,女,G3A,舞蹈Street dance
 戴晨瑜,Delia,女,G3B,舞蹈Street dance
@@ -226,6 +222,7 @@ Khusnura Zakhidjanova,Lily,女,G2C,舞蹈Street dance
 蔡雨臻,Eleven,女,G1A,英语桥梁课程(低段)English Bridge Programme-lower grades
 王楚钧,Jeremiah,男,G1A,英语桥梁课程(低段)English Bridge Programme-lower grades
 巢栩月,Bella,女,G1A,英语桥梁课程(低段)English Bridge Programme-lower grades
+熊昱达,Edmond Dantes,男,G1A,英语桥梁课程(低段)English Bridge Programme-lower grades
 张书源,Jayden,男,G1C,英语桥梁课程(低段)English Bridge Programme-lower grades
 戴晨益,LeLe,男,G2A,英语桥梁课程(低段)English Bridge Programme-lower grades
 顾铭义,EVA,女,G2B,英语桥梁课程(低段)English Bridge Programme-lower grades
@@ -234,10 +231,14 @@ Khusnura Zakhidjanova,Lily,女,G2C,舞蹈Street dance
 肖羽涵,Lydia,女,G2C,英语桥梁课程(低段)English Bridge Programme-lower grades
 顾皓琪,Cici,女,G3A,英语桥梁课程(高段)English Bridge Programme-upper grades
 周嘉涵,Michael,男,G3A,英语桥梁课程(高段)English Bridge Programme-upper grades
+吴泇诺,Jonna,女,G3B,英语桥梁课程(高段)English Bridge Programme-upper grades
+姚梓裕,Seven,男,G3B,英语桥梁课程(高段)English Bridge Programme-upper grades
+谢宇谦,Quintin,男,G3B,英语桥梁课程(高段)English Bridge Programme-upper grades
 宋阳,Lucius,男,G4A,英语桥梁课程(高段)English Bridge Programme-upper grades
 张凯文,kevin zhang,男,G4A,英语桥梁课程(高段)English Bridge Programme-upper grades
 孙赫,Jimmy,男,G4A,英语桥梁课程(高段)English Bridge Programme-upper grades
 徐谦益,Vincent,男,G5A,英语桥梁课程(高段)English Bridge Programme-upper grades
+颜瑾,Ken,男,G5B,英语桥梁课程(高段)English Bridge Programme-upper grades
 夏润柠,Ryan,男,G5B,英语桥梁课程(高段)English Bridge Programme-upper grades
 何彦诺,Nolan,男,G5B,英语桥梁课程(高段)English Bridge Programme-upper grades
 Lucas Xu,Lucas,男,G5B,英语桥梁课程(高段)English Bridge Programme-upper grades
@@ -264,10 +265,11 @@ LeeSiJun,Jun,男,G2C,英语歌曲Sing English
 邵梓涵,Jessica,女,G2B,虚拟现实 （科普）VR
 肖弋丞,Eason,男,G2B,虚拟现实 （科普）VR
 李金泽,James,男,G2C,虚拟现实 （科普）VR
+陈芊羽,Bette,女,G2C,虚拟现实 （科普）VR
+肖羽涵,Lydia,女,G2C,虚拟现实 （科普）VR
 巢凯翔,Dollar,男,G3A,虚拟现实 （科普）VR
 周嘉涵,Michael,男,G3A,虚拟现实 （科普）VR
 徐承初,TOM,男,G3B,虚拟现实 （科普）VR
-姚梓裕,Seven,男,G3B,虚拟现实 （科普）VR
 金童赫,Andy,男,G3C,虚拟现实 （科普）VR
 袁瑞涵,Rayna Yuan,女,G3C,虚拟现实 （科普）VR
 蒋逸宸,Felix,男,G4B,虚拟现实 （科普）VR
@@ -303,7 +305,6 @@ Alexa Wu,Alexa Wu,女,G1C,视觉设计Visual art
 李多殷,Dana,女,G2C,视觉设计Visual art
 顾圆媛,Jessica,女,G3A,视觉设计Visual art
 陆芊妤,Elsie,女,G3B,视觉设计Visual art
-谢宇谦,Quintin,男,G3B,视觉设计Visual art
 Hazal Yasli,Hazal,女,G3C,视觉设计Visual art
 金童赫,Andy,男,G3C,视觉设计Visual art
 PARK SEOEUN,Diana,女,G4A,视觉设计Visual art
@@ -315,9 +316,7 @@ LU/卢,Grace/美慧,女,G4B,视觉设计Visual art
 安迪,Andy,男,G4B,视觉设计Visual art
 陈欣妤,Lemon,女,G5B,视觉设计Visual art
 黄沛宁,Lemon,女,G5B,视觉设计Visual art
-吴怡萱,Lisa,女,G5B,视觉设计Visual art
 吴廷媛,Anna,女,G5B,视觉设计Visual art
-王楚钧,Jeremiah,男,G1A,视频拍摄Vlog
 许嘉洛,Carlos,男,G1A,视频拍摄Vlog
 黄云枫,Felix,男,G2A,视频拍摄Vlog
 胡沐妍,Kayla,女,G2A,视频拍摄Vlog
@@ -337,7 +336,6 @@ Swaroop Deepak Shelar,Swaroop Deepak Shelar,男,G5A,视频拍摄Vlog
 张慕妮,Eva Zhang,女,G5A,视频拍摄Vlog
 殷闳翊,Kenneth,男,G5A,视频拍摄Vlog
 王咨翰,Zane,男,G5B,视频拍摄Vlog
-曹骏宏,Jason,男,G1A,足球Football
 朱俊成,Jason,男,G1A,足球Football
 FAN JUNYI,Jerry,男,G1B,足球Football
 戴未凡,Ege,男,G1B,足球Football
@@ -366,16 +364,13 @@ LeeSiJun,Jun,男,G2C,足球Football
 姚梓裕,Seven,男,G3B,足球Football
 Ali William Ross,Ali,男,G3C,足球Football
 MAJD MAIRI,MAJD,男,G3C,足球Football
-Raymond Schlettig,Raymond Schlettig,男,G3C,足球Football
 ZIRONG GUO,ALINA,女,G3C,足球Football
 董易姗,FIONA DONG,女,G3C,足球Football
 华宇澄,August,女,G3C,足球Football
-Joseph Bernard Soriano Sornillo,Joseph,男,G4A,足球Football
 宋阳,Lucius,男,G4A,足球Football
 孙赫,Jimmy,男,G4A,足球Football
 吴那端,Nathan Oh,男,G4B,足球Football
 Swaroop Deepak Shelar,Swaroop Deepak Shelar,男,G5A,足球Football
-陈修原,Allen,男,G5A,足球Football
 黄禹程,Roy,男,G5A,足球Football
 姜到泫,KANG DO HYEON,男,G5A,足球Football
 倪娜,Nina Thibaud,女,G5A,足球Football
@@ -389,9 +384,9 @@ Swaroop Deepak Shelar,Swaroop Deepak Shelar,男,G5A,足球Football
 徐子芮,Marco,男,G5B,足球Football
 冯宣隆,Leo,男,G5B,足球Football
 张潇屹,Eric,男,G5B,足球Football
+金博衍,Leo Jin,男,G3B,辩论社Debate
 黄钰棋,Frank,男,G3B,辩论社Debate
 ZIRONG GUO,ALINA,女,G3C,辩论社Debate
-Joseph Bernard Soriano Sornillo,Joseph,男,G4A,辩论社Debate
 曹牧云,Candy,女,G4A,辩论社Debate
 卢雨程,Mia,女,G4A,辩论社Debate
 袁梦,Mia,女,G4A,辩论社Debate
